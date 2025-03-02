@@ -1,46 +1,36 @@
-name: Build, Test, and Release
+name: Release
 
 on:
   push:
     tags:
-      - 'v*'  # Runs only when a tag like v1.0.0 is pushed
+      - 'v*'  # Runs when a tag like v1.0.0 is pushed
+
+permissions:
+  contents: write  # Grants write access to create releases
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
-
+  release:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission to Gradle wrapper
-        run: chmod +x gradlew
-
-      - name: Build the project
+      - name: Build JAR file
         run: ./gradlew build
 
-      - name: Run tests
-        run: ./gradlew test
-
-      - name: Upload JAR file as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: todo-cli-jar
-          path: app/build/libs/app.jar
-
-      - name: Create GitHub Release
+      - name: Upload JAR to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           files: app/build/libs/app.jar
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}  # Default token, but permissions must be set
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body: "Automated release for version ${{ github.ref_name }}"
+          name: Release ${{ github.ref_name }}
+          body: Automated release for version ${{ github.ref_name }}
           draft: false
           prerelease: false
