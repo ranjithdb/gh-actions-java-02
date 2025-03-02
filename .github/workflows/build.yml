@@ -1,11 +1,9 @@
-name: Build and Test
+name: Build, Test, and Release
 
 on:
   push:
-    branches:
-      - main
-      - dev
-  pull_request:
+    tags:
+      - 'v*'  # Runs only when a tag like v1.0.0 is pushed
 
 jobs:
   build:
@@ -35,3 +33,14 @@ jobs:
         with:
           name: todo-cli-jar
           path: app/build/libs/app.jar
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/libs/app.jar
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: "Automated release for version ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
